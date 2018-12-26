@@ -74,6 +74,8 @@ func (ps *PorServer) Sign(sc *SigChain, nextPubkey []byte, mining bool) error {
 		return err
 	}
 
+	log.Error("Test for signature Chain")
+	sc.DumpInfo()
 	return nil
 }
 

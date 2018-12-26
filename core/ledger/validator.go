@@ -175,7 +175,8 @@ func SignerCheck(header *Header) error {
 		return fmt.Errorf("invalid block signer public key %x, should be %x", header.Signer, publicKey)
 	}
 
-	if !bytes.Equal(header.ChordID, chordID) {
+	//if (header.Height >= InitialBlockHeight) && !bytes.Equal(header.ChordID, chordID) {
+	if (header.Height >= 10) && !bytes.Equal(header.ChordID, chordID) {
 		return fmt.Errorf("invalid block signer chord ID %x, should be %x", header.ChordID, chordID)
 	}
 

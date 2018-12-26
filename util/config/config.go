@@ -217,6 +217,7 @@ func (config *Configuration) IncrementPort() {
 	config.NodePort += delta
 	config.HttpWsPort += delta
 	config.HttpJsonPort += delta
+	config.HttpProxyPort += delta
 	if delta > 0 {
 		log.Println("Port in use! All ports are automatically increased by", delta)
 	}
