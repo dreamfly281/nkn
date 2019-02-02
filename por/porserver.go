@@ -130,16 +130,16 @@ func (ps *PorServer) LenOfSigChain(sc *SigChain) int {
 	return sc.Length()
 }
 
-func (ps *PorServer) GetMiningSigChain(height uint32) (*SigChain, error) {
+func (ps *PorServer) GetMiningSigChain(height uint32) (*SigChain) {
 	ps.RLock()
 	defer ps.RUnlock()
 
 	miningPorPackage := ps.miningPorPackage[height]
 	if miningPorPackage == nil {
-		return nil, nil
+		return nil
 	}
 
-	return miningPorPackage.GetSigChain(), nil
+	return miningPorPackage.GetSigChain()
 }
 
 func (ps *PorServer) GetMiningSigChainTxnHash(height uint32) (common.Uint256, error) {
@@ -178,15 +178,16 @@ func (ps *PorServer) AddSigChainFromTx(txn *transaction.Transaction, currentHeig
 		return false, err
 	}
 
-	voteForHeight := porPkg.GetVoteForHeight()
-	if voteForHeight < currentHeight+2 {
-		return false, fmt.Errorf("sigchain vote for height %d is less than %d", voteForHeight, currentHeight+2)
+	voteHeight := porPkg.GetVoteForHeight()
+	if voteHeight < currentHeight+2 {
+		return false, fmt.Errorf("sigchain vote for height %d is less than %d", voteHeight, currentHeight+2)
 	}
 
 	ps.Lock()
 	defer ps.Unlock()
 
-	if ps.miningPorPackage[voteForHeight] != nil && bytes.Compare(porPkg.SigHash, ps.miningPorPackage[voteForHeight].SigHash) >= 0 {
+	// TODO add aging time for signature chain to avoid the dead node send a txn without proposal block
+	if ps.miningPorPackage[voteHeight] != nil && bytes.Compare(porPkg.SigHash, ps.miningPorPackage[voteHeight].SigHash) >= 0 {
 		return false, nil
 	}
 
@@ -195,7 +196,7 @@ func (ps *PorServer) AddSigChainFromTx(txn *transaction.Transaction, currentHeig
 		return false, err
 	}
 
-	ps.miningPorPackage[voteForHeight] = porPkg
+	ps.miningPorPackage[voteHeight] = porPkg
 
 	return true, nil
 }

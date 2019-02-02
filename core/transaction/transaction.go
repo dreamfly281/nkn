@@ -608,6 +608,7 @@ func (tx *Transaction) UnmarshalJson(data []byte) error {
 		tx.Payload = new(payload.Prepaid)
 	case Withdraw:
 		tx.Payload = new(payload.Withdraw)
+		// TODO change the commit to a meanful name like SigChain
 	case Commit:
 		tx.Payload = new(payload.Commit)
 	case RegisterName:

@@ -446,6 +446,50 @@ func (sc *SigChain) GetMiner() ([]byte, []byte, error) {
 	return sc.Elems[originalIndex-1].NextPubkey, sc.Elems[originalIndex].Addr, nil
 }
 
+func (sc *SigChain) GetNextMiner(blkHash common.Uint256) ([]byte, []byte, error) {
+	if !sc.IsFinal() {
+		return nil, nil, errors.New("not final")
+	}
+
+	n := sc.Length()
+	if n < 3 {
+		return nil, nil, errors.New("not enough elements")
+	}
+
+	type SigChainElemInfo struct {
+		index int
+		elem  *SigChainElem
+	}
+	var minerElems []*SigChainElemInfo
+	for i, e := range sc.Elems {
+		if e.Mining == true {
+			t := &SigChainElemInfo{
+				index: i,
+				elem:  e,
+			}
+			minerElems = append(minerElems, t)
+		}
+	}
+	elemLen := int64(len(minerElems))
+	if elemLen == 0 {
+		err := errors.New("invalid signature chain for block proposer selection")
+		log.Error(err)
+		return nil, nil, err
+	}
+	newIndex := big.NewInt(0)
+	x := big.NewInt(0)
+	x.SetBytes(blkHash.ToArray())
+	y := big.NewInt(elemLen)
+	newIndex.Mod(x, y)
+
+	originalIndex := minerElems[newIndex.Int64()].index
+	if originalIndex == 0 {
+		return sc.GetSrcPubkey(), sc.Elems[0].Addr, nil
+	}
+
+	return sc.Elems[originalIndex-1].NextPubkey, sc.Elems[originalIndex].Addr, nil
+}
+
 func (sc *SigChain) nextSigner() ([]byte, error) {
 	e, err := sc.lastSigElem()
 	if err != nil {

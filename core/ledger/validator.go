@@ -13,6 +13,7 @@ import (
 	"github.com/nknorg/nkn/core/transaction/payload"
 	"github.com/nknorg/nkn/crypto"
 	. "github.com/nknorg/nkn/errors"
+	"github.com/nknorg/nkn/util/log"
 	"github.com/nknorg/nkn/por"
 	"github.com/nknorg/nkn/util/config"
 )
@@ -67,75 +68,48 @@ func TransactionCheck(block *Block) error {
 // GetNextBlockSigner gets the next block signer after block height at
 // timestamp. Returns next signer's public key, chord ID, winner type, and error
 func GetNextBlockSigner(height uint32, timestamp int64) ([]byte, []byte, WinnerType, error) {
+	var publicKey []byte
+	var chordID []byte
+
 	currentHeight := DefaultLedger.Store.GetHeight()
+	// Fixme Useless compare as the height get from the same place, except some race case?
 	if height > currentHeight {
 		return nil, nil, 0, fmt.Errorf("Height %d is higher than current height %d", height, currentHeight)
 	}
 
-	headerHash := DefaultLedger.Store.GetHeaderHashByHeight(height)
-	header, err := DefaultLedger.Store.GetHeader(headerHash)
+	hdrHash := DefaultLedger.Store.GetHeaderHashByHeight(height)
+	hdr, err := DefaultLedger.Store.GetHeader(hdrHash)
 	if err != nil {
 		return nil, nil, 0, err
 	}
-
-	var publicKey []byte
-	var chordID []byte
-	winnerType := header.WinnerType
-
-	if winnerType == GenesisSigner {
-		genesisBlockHash, err := DefaultLedger.Store.GetBlockHash(0)
-		if err != nil {
-			return nil, nil, 0, err
-		}
-
-		genesisBlock, err := DefaultLedger.Store.GetBlock(genesisBlockHash)
-		if err != nil {
-			return nil, nil, 0, err
-		}
-
-		publicKey, chordID, err = genesisBlock.GetSigner()
-		if err != nil {
-			return nil, nil, 0, err
-		}
-
-		return publicKey, chordID, GenesisSigner, nil
+	// Fixme, Not match with the tolerence time
+	if timestamp <= hdr.Timestamp {
+		return nil, nil, 0, fmt.Errorf("timestamp %d is earlier than previous block timestamp %d",
+			timestamp, hdr.Timestamp)
 	}
 
-	if timestamp <= header.Timestamp {
-		return nil, nil, 0, fmt.Errorf("timestamp %d is earlier than previous block timestamp %d", timestamp, header.Timestamp)
-	}
-
-	// calculate time difference
-	timeSinceLastBlock := timestamp - header.Timestamp
-	timeSlot := int64(config.ProposerChangeTime / time.Second)
-
-	if timeSinceLastBlock >= timeSlot {
-		winnerType = BlockSigner
-
-		// This is a temporary solution
-		proposerBlockHeight := 0
-		// index := timeSinceLastBlock / timeSlot
-		// proposerBlockHeight := int64(DefaultLedger.Store.GetHeight()) - index
-		// if proposerBlockHeight < 0 {
-		// proposerBlockHeight = 0
-		// }
-
-		proposerBlockHash, err := DefaultLedger.Store.GetBlockHash(uint32(proposerBlockHeight))
-		if err != nil {
-			return nil, nil, 0, err
-		}
-		proposerBlock, err := DefaultLedger.Store.GetBlock(proposerBlockHash)
-		if err != nil {
-			return nil, nil, 0, err
-		}
-		publicKey, chordID, err = proposerBlock.GetSigner()
-		if err != nil {
-			return nil, nil, 0, err
-		}
-	} else {
+	winnerType := hdr.WinnerType
+	timeSinceLastBlock := timestamp - hdr.Timestamp
+	proposerTimeout := int64(config.ProposerChangeTime / time.Second)
+	if timeSinceLastBlock < proposerTimeout {
 		switch winnerType {
+		case GenesisSigner:
+			genesisBlockHash, err := DefaultLedger.Store.GetBlockHash(0)
+			if err != nil {
+				return nil, nil, 0, err
+			}
+
+			genesisBlock, err := DefaultLedger.Store.GetBlock(genesisBlockHash)
+			if err != nil {
+				return nil, nil, 0, err
+			}
+
+			publicKey, chordID, err = genesisBlock.GetSigner()
+			if err != nil {
+				return nil, nil, 0, err
+			}
 		case TxnSigner:
-			txn, err := DefaultLedger.Store.GetTransaction(header.WinnerHash)
+			txn, err := DefaultLedger.Store.GetTransaction(hdr.WinnerHash)
 			if err != nil {
 				return nil, nil, 0, err
 			}
@@ -145,11 +119,64 @@ func GetNextBlockSigner(height uint32, timestamp int64) ([]byte, []byte, WinnerT
 			}
 			sigchain := &por.SigChain{}
 			proto.Unmarshal(payload.SigChain, sigchain)
+
 			publicKey, chordID, err = sigchain.GetMiner()
 			if err != nil {
 				return nil, nil, 0, err
 			}
-		case BlockSigner:
+		case TimeOutTxnSigner:
+			winnerType = TxnSigner
+			txn, err := DefaultLedger.Store.GetTransaction(hdr.WinnerHash)
+			if err != nil {
+				return nil, nil, 0, err
+			}
+			payload, ok := txn.Payload.(*payload.Commit)
+			if !ok {
+				return nil, nil, 0, errors.New("invalid transaction type")
+			}
+			sigchain := &por.SigChain{}
+			proto.Unmarshal(payload.SigChain, sigchain)
+
+			publicKey, chordID, err = sigchain.GetNextMiner(hdrHash)
+			if err != nil {
+				return nil, nil, 0, err
+			}
+
+		}
+	} else {
+		// Don't need change the winnerType cause GetNextMiningSigChainTxnHash will handle this.
+		winnerType = TimeOutTxnSigner
+		// This is a temporary solution
+		// proposerBlockHeight := 0
+		// index := timeSinceLastBlock / timeSlot
+		// proposerBlockHeight := int64(DefaultLedger.Store.GetHeight()) - index
+		// if proposerBlockHeight < 0 {
+		// proposerBlockHeight = 0
+		// }
+
+		// proposerBlockHash, err := DefaultLedger.Store.GetBlockHash(uint32(proposerBlockHeight))
+		// if err != nil {
+		// 	return nil, nil, 0, err
+		// }
+		// proposerBlock, err := DefaultLedger.Store.GetBlock(proposerBlockHash)
+		// if err != nil {
+		// 	return nil, nil, 0, err
+		// }
+		// publicKey, chordID, err = proposerBlock.GetSigner()
+		// if err != nil {
+		// 	return nil, nil, 0, err
+		// }
+
+		// FiXME the txn not be package/blocklization successfully and always keeps in the por server ??
+		// TODO add aging time for signature chain to avoid the dead node send a txn without proposal block
+		sigChain := por.GetPorServer().GetMiningSigChain(height + 1)
+		if (sigChain == nil) {
+			log.Warningf("No valid sigchain found when timeout for height ", height)
+			return nil, nil, 0, err
+		}
+		publicKey, chordID, err = sigChain.GetMiner()
+		if err != nil {
+			return nil, nil, 0, err
 		}
 	}
 
@@ -159,6 +186,12 @@ func GetNextBlockSigner(height uint32, timestamp int64) ([]byte, []byte, WinnerT
 // GetWinner returns the winner hash and winner type of a block height using
 // sigchain from PoR server.
 func GetNextMiningSigChainTxnHash(height uint32) (Uint256, WinnerType, error) {
+	hdrHash := DefaultLedger.Store.GetHeaderHashByHeight(height)
+	hdr, err := DefaultLedger.Store.GetHeader(hdrHash)
+	if err != nil {
+		return EmptyUint256, 0, err
+	}
+
 	if height < NumGenesisBlocks {
 		return EmptyUint256, GenesisSigner, nil
 	}
@@ -169,10 +202,18 @@ func GetNextMiningSigChainTxnHash(height uint32) (Uint256, WinnerType, error) {
 	}
 
 	if nextMiningSigChainTxnHash == EmptyUint256 {
-		return EmptyUint256, BlockSigner, nil
+		return EmptyUint256, BlockSigner, errors.New("Couldn't find valid sigChain")
 	}
 
-	return nextMiningSigChainTxnHash, TxnSigner, nil
+	winnerType := TxnSigner
+	timestamp := time.Now().Unix()
+	timeSinceLastBlock := timestamp - hdr.Timestamp
+	proposerTimeout := int64(config.ProposerChangeTime / time.Second)
+	if timeSinceLastBlock >= proposerTimeout {
+		winnerType = TimeOutTxnSigner
+	}
+
+	return nextMiningSigChainTxnHash, winnerType, nil
 }
 
 func SignerCheck(header *Header) error {
@@ -260,6 +301,7 @@ func NextBlockProposerCheck(block *Block) error {
 		return err
 	}
 
+	// What?
 	if winnerHash == EmptyUint256 && block.Header.WinnerHash != EmptyUint256 {
 		for _, txn := range block.Transactions {
 			if txn.Hash() == block.Header.WinnerHash {

@@ -25,6 +25,9 @@ const (
 	TxnSigner WinnerType = 1
 	// WinningBlockHash means next Block proposer is signer of historical Block.
 	BlockSigner WinnerType = 2
+	// The future signature chain be choosed cause currently proposal timeout
+	// It can't coexisted with BlockSigner
+	TimeOutTxnSigner WinnerType = 3
 
 	// Genesis block proposer will propose first 5 blocks
 	NumGenesisBlocks = por.SigChainMiningHeightOffset + por.SigChainBlockHeightOffset - 1

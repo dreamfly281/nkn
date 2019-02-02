@@ -11,6 +11,7 @@ import (
 
 // startProposing starts the proposing routing
 func (consensus *Consensus) startProposing() {
+	// Fixme proposingInterval is 500ms, isn't too short
 	proposingTimer := time.NewTimer(proposingStartDelay)
 	for {
 		select {
