@@ -92,10 +92,10 @@ func (ps *PorServer) Verify(sc *SigChain) error {
 	return nil
 }
 
-func (ps *PorServer) CreateSigChain(dataSize uint32, dataHash, blockHash *common.Uint256, srcID,
-	destPubkey, nextPubkey []byte, mining bool) (*SigChain, error) {
-	return NewSigChain(ps.account, dataSize, dataHash[:], blockHash[:], srcID, destPubkey, nextPubkey, mining)
-}
+// func (ps *PorServer) CreateSigChain(dataSize uint32, dataHash, blockHash *common.Uint256, srcID,
+// 	destPubkey, nextPubkey []byte, mining bool) (*SigChain, error) {
+// 	return NewSigChain(ps.account, dataSize, dataHash[:], blockHash[:], srcID, destPubkey, nextPubkey, mining)
+// }
 
 func (ps *PorServer) CreateSigChainForClient(dataSize uint32, dataHash, blockHash *common.Uint256, srcID,
 	srcPubkey, destPubkey, signature []byte, sigAlgo SigAlgo) (*SigChain, error) {
@@ -179,8 +179,8 @@ func (ps *PorServer) AddSigChainFromTx(txn *transaction.Transaction, currentHeig
 	}
 
 	voteHeight := porPkg.GetVoteForHeight()
-	if voteHeight < currentHeight+2 {
-		return false, fmt.Errorf("sigchain vote for height %d is less than %d", voteHeight, currentHeight+2)
+	if voteHeight < currentHeight {
+		return false, fmt.Errorf("sigchain vote for height %d is less than %d", voteHeight, currentHeight+1)
 	}
 
 	ps.Lock()

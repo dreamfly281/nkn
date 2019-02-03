@@ -39,7 +39,7 @@ func (bm *BuiltinMining) BuildBlock(height uint32, chordID []byte, winningHash c
 	txnList = append(txnList, coinbase)
 	txnHashList = append(txnHashList, coinbase.Hash())
 
-	if winnerType == TxnSigner {
+	if (winnerType == TxnSigner || winnerType == TimeOutTxnSigner) {
 		miningSigChainTxn, err := por.GetPorServer().GetMiningSigChainTxn(winningHash)
 		if err != nil {
 			return nil, err

@@ -99,6 +99,7 @@ func NewPorPackage(txn *transaction.Transaction) (*PorPackage, error) {
 		return nil, err
 	}
 
+	log.Infof("the signchain txn height is ", height)
 	owner, err := sigChain.GetOwner()
 	if err != nil {
 		return nil, err
@@ -110,7 +111,8 @@ func NewPorPackage(txn *transaction.Transaction) (*PorPackage, error) {
 		return nil, err
 	}
 	pp := &PorPackage{
-		VoteForHeight: height + SigChainMiningHeightOffset + SigChainBlockHeightOffset,
+		//VoteForHeight: height + SigChainMiningHeightOffset + SigChainBlockHeightOffset,
+		VoteForHeight: height + 1,
 		Owner:         owner,
 		BlockHash:     sigChain.BlockHash,
 		TxHash:        txHash[:],

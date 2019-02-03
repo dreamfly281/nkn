@@ -159,6 +159,7 @@ func (localNode *LocalNode) SendRelayMessage(srcAddr, destAddr string, payload, 
 		return err
 	}
 
+	// Fixme why decrease the height of expected block??
 	height := ledger.DefaultLedger.Store.GetHeight() - por.SigChainBlockHeightOffset
 	if height < 0 {
 		height = 0
