@@ -27,18 +27,18 @@ var _ = math.Inf
 const _ = proto.GoGoProtoPackageIsVersion2 // please upgrade the proto package
 
 type PorPackage struct {
-	VoteForHeight uint32    `protobuf:"varint,1,opt,name=VoteForHeight,proto3" json:"VoteForHeight,omitempty"`
-	Owner         []byte    `protobuf:"bytes,2,opt,name=Owner,proto3" json:"Owner,omitempty"`
-	BlockHash     []byte    `protobuf:"bytes,3,opt,name=BlockHash,proto3" json:"BlockHash,omitempty"`
-	TxHash        []byte    `protobuf:"bytes,4,opt,name=TxHash,proto3" json:"TxHash,omitempty"`
-	SigHash       []byte    `protobuf:"bytes,5,opt,name=SigHash,proto3" json:"SigHash,omitempty"`
-	SigChain      *SigChain `protobuf:"bytes,6,opt,name=SigChain" json:"SigChain,omitempty"`
+	VoteHeight uint32    `protobuf:"varint,1,opt,name=VoteHeight,proto3" json:"VoteHeight,omitempty"`
+	Owner      []byte    `protobuf:"bytes,2,opt,name=Owner,proto3" json:"Owner,omitempty"`
+	BlockHash  []byte    `protobuf:"bytes,3,opt,name=BlockHash,proto3" json:"BlockHash,omitempty"`
+	TxnHash    []byte    `protobuf:"bytes,4,opt,name=TxnHash,proto3" json:"TxnHash,omitempty"`
+	SigHash    []byte    `protobuf:"bytes,5,opt,name=SigHash,proto3" json:"SigHash,omitempty"`
+	SigChain   *SigChain `protobuf:"bytes,6,opt,name=SigChain" json:"SigChain,omitempty"`
 }
 
 func (m *PorPackage) Reset()      { *m = PorPackage{} }
 func (*PorPackage) ProtoMessage() {}
 func (*PorPackage) Descriptor() ([]byte, []int) {
-	return fileDescriptor_porpackage_c78aed54284067a2, []int{0}
+	return fileDescriptor_porpackage_a890dc2464fafe41, []int{0}
 }
 func (m *PorPackage) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -67,9 +67,9 @@ func (m *PorPackage) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_PorPackage proto.InternalMessageInfo
 
-func (m *PorPackage) GetVoteForHeight() uint32 {
+func (m *PorPackage) GetVoteHeight() uint32 {
 	if m != nil {
-		return m.VoteForHeight
+		return m.VoteHeight
 	}
 	return 0
 }
@@ -88,9 +88,9 @@ func (m *PorPackage) GetBlockHash() []byte {
 	return nil
 }
 
-func (m *PorPackage) GetTxHash() []byte {
+func (m *PorPackage) GetTxnHash() []byte {
 	if m != nil {
-		return m.TxHash
+		return m.TxnHash
 	}
 	return nil
 }
@@ -131,7 +131,7 @@ func (this *PorPackage) Equal(that interface{}) bool {
 	} else if this == nil {
 		return false
 	}
-	if this.VoteForHeight != that1.VoteForHeight {
+	if this.VoteHeight != that1.VoteHeight {
 		return false
 	}
 	if !bytes.Equal(this.Owner, that1.Owner) {
@@ -140,7 +140,7 @@ func (this *PorPackage) Equal(that interface{}) bool {
 	if !bytes.Equal(this.BlockHash, that1.BlockHash) {
 		return false
 	}
-	if !bytes.Equal(this.TxHash, that1.TxHash) {
+	if !bytes.Equal(this.TxnHash, that1.TxnHash) {
 		return false
 	}
 	if !bytes.Equal(this.SigHash, that1.SigHash) {
@@ -157,10 +157,10 @@ func (this *PorPackage) GoString() string {
 	}
 	s := make([]string, 0, 10)
 	s = append(s, "&por.PorPackage{")
-	s = append(s, "VoteForHeight: "+fmt.Sprintf("%#v", this.VoteForHeight)+",\n")
+	s = append(s, "VoteHeight: "+fmt.Sprintf("%#v", this.VoteHeight)+",\n")
 	s = append(s, "Owner: "+fmt.Sprintf("%#v", this.Owner)+",\n")
 	s = append(s, "BlockHash: "+fmt.Sprintf("%#v", this.BlockHash)+",\n")
-	s = append(s, "TxHash: "+fmt.Sprintf("%#v", this.TxHash)+",\n")
+	s = append(s, "TxnHash: "+fmt.Sprintf("%#v", this.TxnHash)+",\n")
 	s = append(s, "SigHash: "+fmt.Sprintf("%#v", this.SigHash)+",\n")
 	if this.SigChain != nil {
 		s = append(s, "SigChain: "+fmt.Sprintf("%#v", this.SigChain)+",\n")
@@ -191,10 +191,10 @@ func (m *PorPackage) MarshalTo(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.VoteForHeight != 0 {
+	if m.VoteHeight != 0 {
 		dAtA[i] = 0x8
 		i++
-		i = encodeVarintPorpackage(dAtA, i, uint64(m.VoteForHeight))
+		i = encodeVarintPorpackage(dAtA, i, uint64(m.VoteHeight))
 	}
 	if len(m.Owner) > 0 {
 		dAtA[i] = 0x12
@@ -208,11 +208,11 @@ func (m *PorPackage) MarshalTo(dAtA []byte) (int, error) {
 		i = encodeVarintPorpackage(dAtA, i, uint64(len(m.BlockHash)))
 		i += copy(dAtA[i:], m.BlockHash)
 	}
-	if len(m.TxHash) > 0 {
+	if len(m.TxnHash) > 0 {
 		dAtA[i] = 0x22
 		i++
-		i = encodeVarintPorpackage(dAtA, i, uint64(len(m.TxHash)))
-		i += copy(dAtA[i:], m.TxHash)
+		i = encodeVarintPorpackage(dAtA, i, uint64(len(m.TxnHash)))
+		i += copy(dAtA[i:], m.TxnHash)
 	}
 	if len(m.SigHash) > 0 {
 		dAtA[i] = 0x2a
@@ -244,7 +244,7 @@ func encodeVarintPorpackage(dAtA []byte, offset int, v uint64) int {
 }
 func NewPopulatedPorPackage(r randyPorpackage, easy bool) *PorPackage {
 	this := &PorPackage{}
-	this.VoteForHeight = uint32(r.Uint32())
+	this.VoteHeight = uint32(r.Uint32())
 	v1 := r.Intn(100)
 	this.Owner = make([]byte, v1)
 	for i := 0; i < v1; i++ {
@@ -256,9 +256,9 @@ func NewPopulatedPorPackage(r randyPorpackage, easy bool) *PorPackage {
 		this.BlockHash[i] = byte(r.Intn(256))
 	}
 	v3 := r.Intn(100)
-	this.TxHash = make([]byte, v3)
+	this.TxnHash = make([]byte, v3)
 	for i := 0; i < v3; i++ {
-		this.TxHash[i] = byte(r.Intn(256))
+		this.TxnHash[i] = byte(r.Intn(256))
 	}
 	v4 := r.Intn(100)
 	this.SigHash = make([]byte, v4)
@@ -351,8 +351,8 @@ func (m *PorPackage) Size() (n int) {
 	}
 	var l int
 	_ = l
-	if m.VoteForHeight != 0 {
-		n += 1 + sovPorpackage(uint64(m.VoteForHeight))
+	if m.VoteHeight != 0 {
+		n += 1 + sovPorpackage(uint64(m.VoteHeight))
 	}
 	l = len(m.Owner)
 	if l > 0 {
@@ -362,7 +362,7 @@ func (m *PorPackage) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovPorpackage(uint64(l))
 	}
-	l = len(m.TxHash)
+	l = len(m.TxnHash)
 	if l > 0 {
 		n += 1 + l + sovPorpackage(uint64(l))
 	}
@@ -395,10 +395,10 @@ func (this *PorPackage) String() string {
 		return "nil"
 	}
 	s := strings.Join([]string{`&PorPackage{`,
-		`VoteForHeight:` + fmt.Sprintf("%v", this.VoteForHeight) + `,`,
+		`VoteHeight:` + fmt.Sprintf("%v", this.VoteHeight) + `,`,
 		`Owner:` + fmt.Sprintf("%v", this.Owner) + `,`,
 		`BlockHash:` + fmt.Sprintf("%v", this.BlockHash) + `,`,
-		`TxHash:` + fmt.Sprintf("%v", this.TxHash) + `,`,
+		`TxnHash:` + fmt.Sprintf("%v", this.TxnHash) + `,`,
 		`SigHash:` + fmt.Sprintf("%v", this.SigHash) + `,`,
 		`SigChain:` + strings.Replace(fmt.Sprintf("%v", this.SigChain), "SigChain", "SigChain", 1) + `,`,
 		`}`,
@@ -444,9 +444,9 @@ func (m *PorPackage) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field VoteForHeight", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field VoteHeight", wireType)
 			}
-			m.VoteForHeight = 0
+			m.VoteHeight = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowPorpackage
@@ -456,7 +456,7 @@ func (m *PorPackage) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.VoteForHeight |= (uint32(b) & 0x7F) << shift
+				m.VoteHeight |= (uint32(b) & 0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -525,7 +525,7 @@ func (m *PorPackage) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 4:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field TxHash", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field TxnHash", wireType)
 			}
 			var byteLen int
 			for shift := uint(0); ; shift += 7 {
@@ -549,9 +549,9 @@ func (m *PorPackage) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.TxHash = append(m.TxHash[:0], dAtA[iNdEx:postIndex]...)
-			if m.TxHash == nil {
-				m.TxHash = []byte{}
+			m.TxnHash = append(m.TxnHash[:0], dAtA[iNdEx:postIndex]...)
+			if m.TxnHash == nil {
+				m.TxnHash = []byte{}
 			}
 			iNdEx = postIndex
 		case 5:
@@ -744,26 +744,26 @@ var (
 	ErrIntOverflowPorpackage   = fmt.Errorf("proto: integer overflow")
 )
 
-func init() { proto.RegisterFile("porpackage.proto", fileDescriptor_porpackage_c78aed54284067a2) }
+func init() { proto.RegisterFile("porpackage.proto", fileDescriptor_porpackage_a890dc2464fafe41) }
 
-var fileDescriptor_porpackage_c78aed54284067a2 = []byte{
-	// 284 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x54, 0x90, 0x31, 0x4b, 0xc3, 0x40,
-	0x14, 0x80, 0xef, 0x59, 0x5b, 0xf5, 0x34, 0x22, 0x87, 0x48, 0x28, 0xf2, 0x08, 0xe2, 0x10, 0x07,
-	0x53, 0xd0, 0xd5, 0xa9, 0x82, 0x74, 0xb3, 0xa4, 0xe2, 0x9e, 0x84, 0x78, 0x39, 0xaa, 0x7d, 0xe1,
-	0x9a, 0xa2, 0xa3, 0x3f, 0xc1, 0x9f, 0xe1, 0x4f, 0x70, 0x77, 0x71, 0xcc, 0xd8, 0xd1, 0x5c, 0x16,
-	0xc7, 0x8e, 0x8e, 0xe2, 0xc5, 0x2a, 0x6e, 0xf7, 0x7d, 0x1f, 0xf7, 0x78, 0x3c, 0xbe, 0x93, 0x93,
-	0xce, 0xa3, 0x64, 0x1c, 0xc9, 0x34, 0xc8, 0x35, 0x15, 0x24, 0x5a, 0x39, 0xe9, 0xee, 0xb1, 0x54,
-	0x45, 0x36, 0x8b, 0x83, 0x84, 0xee, 0x7a, 0x92, 0x24, 0xf5, 0x6c, 0x8b, 0x67, 0x37, 0x96, 0x2c,
-	0xd8, 0x57, 0xf3, 0xa7, 0xbb, 0x3d, 0x55, 0x32, 0xc9, 0x22, 0x35, 0x69, 0xf8, 0xe0, 0x15, 0x38,
-	0x1f, 0x92, 0x1e, 0x36, 0x83, 0xc5, 0x21, 0x77, 0xae, 0xa9, 0x48, 0x2f, 0x48, 0x0f, 0x52, 0x25,
-	0xb3, 0xc2, 0x05, 0x0f, 0x7c, 0x27, 0xfc, 0x2f, 0xc5, 0x2e, 0x6f, 0x5f, 0xde, 0x4f, 0x52, 0xed,
-	0xae, 0x78, 0xe0, 0x6f, 0x85, 0x0d, 0x88, 0x7d, 0xbe, 0xd1, 0xbf, 0xa5, 0x64, 0x3c, 0x88, 0xa6,
-	0x99, 0xdb, 0xb2, 0xe5, 0x4f, 0x88, 0x3d, 0xde, 0xb9, 0x7a, 0xb0, 0x69, 0xd5, 0xa6, 0x1f, 0x12,
-	0x2e, 0x5f, 0x1b, 0x29, 0x69, 0x43, 0xdb, 0x86, 0x25, 0x8a, 0x23, 0xbe, 0x3e, 0x52, 0xf2, 0xfc,
-	0x7b, 0x59, 0xb7, 0xe3, 0x81, 0xbf, 0x79, 0xe2, 0x04, 0x39, 0xe9, 0x60, 0x29, 0xc3, 0xdf, 0xdc,
-	0x3f, 0x2b, 0x2b, 0x64, 0xf3, 0x0a, 0xd9, 0xa2, 0x42, 0xf8, 0xac, 0x10, 0x1e, 0x0d, 0xc2, 0xb3,
-	0x41, 0x78, 0x31, 0x08, 0x6f, 0x06, 0xa1, 0x34, 0x08, 0xef, 0x06, 0xe1, 0xc3, 0x20, 0x5b, 0x18,
-	0x84, 0xa7, 0x1a, 0x59, 0x59, 0x23, 0x9b, 0xd7, 0xc8, 0xe2, 0x8e, 0x3d, 0xc5, 0xe9, 0x57, 0x00,
-	0x00, 0x00, 0xff, 0xff, 0x61, 0x7f, 0x5c, 0x80, 0x62, 0x01, 0x00, 0x00,
+var fileDescriptor_porpackage_a890dc2464fafe41 = []byte{
+	// 280 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x4c, 0xd0, 0x31, 0x4e, 0xc3, 0x30,
+	0x14, 0xc6, 0x71, 0x3f, 0x4a, 0x0b, 0x18, 0x8a, 0x90, 0xc5, 0x10, 0x55, 0xe8, 0xa9, 0x62, 0x0a,
+	0x03, 0xa9, 0x04, 0x2b, 0x53, 0x59, 0xba, 0x51, 0xa5, 0x88, 0x3d, 0x89, 0x82, 0x63, 0x15, 0xf2,
+	0x22, 0x37, 0x15, 0x8c, 0x1c, 0x81, 0x63, 0x70, 0x04, 0x36, 0x56, 0xc6, 0x8c, 0x1d, 0x89, 0xb3,
+	0x30, 0x76, 0x64, 0x44, 0xb5, 0x29, 0xb0, 0xe5, 0xff, 0xfd, 0x14, 0xcb, 0x32, 0x3f, 0x28, 0x48,
+	0x17, 0x51, 0x32, 0x8d, 0x64, 0x1a, 0x14, 0x9a, 0x4a, 0x12, 0xad, 0x82, 0x74, 0xef, 0x54, 0xaa,
+	0x32, 0x9b, 0xc7, 0x41, 0x42, 0xf7, 0x03, 0x49, 0x92, 0x06, 0xd6, 0xe2, 0xf9, 0xad, 0x2d, 0x1b,
+	0xf6, 0xcb, 0xfd, 0xd3, 0xdb, 0x9f, 0x29, 0x99, 0x64, 0x91, 0xca, 0x5d, 0x1f, 0xbf, 0x01, 0xe7,
+	0x63, 0xd2, 0x63, 0x77, 0xb0, 0x40, 0xce, 0x6f, 0xa8, 0x4c, 0x47, 0xa9, 0x92, 0x59, 0xe9, 0x41,
+	0x1f, 0xfc, 0x6e, 0xf8, 0x6f, 0x11, 0x87, 0xbc, 0x7d, 0xf5, 0x90, 0xa7, 0xda, 0xdb, 0xe8, 0x83,
+	0xbf, 0x17, 0xba, 0x10, 0x47, 0x7c, 0x67, 0x78, 0x47, 0xc9, 0x74, 0x14, 0xcd, 0x32, 0xaf, 0x65,
+	0xe5, 0x6f, 0x10, 0x1e, 0xdf, 0xba, 0x7e, 0xcc, 0xad, 0x6d, 0x5a, 0x5b, 0xe7, 0x4a, 0x26, 0x4a,
+	0x5a, 0x69, 0x3b, 0xf9, 0x49, 0x71, 0xc2, 0xb7, 0x27, 0x4a, 0x5e, 0xae, 0x2e, 0xea, 0x75, 0xfa,
+	0xe0, 0xef, 0x9e, 0x75, 0x83, 0x82, 0x74, 0xb0, 0x1e, 0xc3, 0x5f, 0x1e, 0x5e, 0x54, 0x35, 0xb2,
+	0x45, 0x8d, 0x6c, 0x59, 0x23, 0x7c, 0xd5, 0x08, 0x4f, 0x06, 0xe1, 0xc5, 0x20, 0xbc, 0x1a, 0x84,
+	0x77, 0x83, 0x50, 0x19, 0x84, 0x0f, 0x83, 0xf0, 0x69, 0x90, 0x2d, 0x0d, 0xc2, 0x73, 0x83, 0xac,
+	0x6a, 0x90, 0x2d, 0x1a, 0x64, 0x71, 0xc7, 0x3e, 0xc3, 0xf9, 0x77, 0x00, 0x00, 0x00, 0xff, 0xff,
+	0x61, 0xf1, 0x67, 0xe3, 0x5e, 0x01, 0x00, 0x00,
 }

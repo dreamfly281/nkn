@@ -17,10 +17,10 @@ option (gogoproto.populate_all) = true;
 import "sigchain.proto";
 
 message PorPackage {
-  uint32 VoteForHeight = 1;
+  uint32 VoteHeight = 1;
   bytes Owner = 2;
   bytes BlockHash = 3;
-  bytes TxHash = 4;
+  bytes TxnHash = 4;
   bytes SigHash = 5;
   SigChain SigChain = 6;
 }

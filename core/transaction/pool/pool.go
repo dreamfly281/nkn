@@ -56,7 +56,7 @@ func (tp *TxnPool) AppendTxnPool(txn *Transaction) ErrCode {
 
 	// get signature chain from commit transaction then add it to POR server
 	if txn.TxType == Commit {
-		added, err := por.GetPorServer().AddSigChainFromTx(txn, ledger.DefaultLedger.Store.GetHeight())
+		added, err := por.GetPorServer().AddSigChainFromTxn(txn, ledger.DefaultLedger.Store.GetHeight())
 		if err != nil {
 			log.Infof("Add sigchain from transaction error: %v", err)
 			return ErrerCode(NewDetailErr(err, ErrNoCode, err.Error()))

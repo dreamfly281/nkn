@@ -10,14 +10,13 @@ import (
 	"github.com/nknorg/nkn/core/transaction/payload"
 	"github.com/nknorg/nkn/crypto"
 	"github.com/nknorg/nkn/crypto/util"
-	"github.com/nknorg/nkn/por"
 	"github.com/nknorg/nkn/util/config"
 	"github.com/nknorg/nkn/vault"
 	"github.com/nknorg/nnet/log"
 )
 
 type Mining interface {
-	BuildBlock(height uint32, chordID []byte, winningHash common.Uint256, winnerType WinnerType, timestamp int64) (*Block, error)
+	BuildBlock(height uint32, chordID []byte, WinnerTxn *transaction.Transaction, winnerType WinnerType, timestamp int64) (*Block, error)
 }
 
 type BuiltinMining struct {
@@ -32,7 +31,7 @@ func NewBuiltinMining(account *vault.Account, txnCollector *transaction.TxnColle
 	}
 }
 
-func (bm *BuiltinMining) BuildBlock(height uint32, chordID []byte, winningHash common.Uint256, winnerType WinnerType, timestamp int64) (*Block, error) {
+func (bm *BuiltinMining) BuildBlock(height uint32, chordID []byte, WinnerTxn *transaction.Transaction, winnerType WinnerType, timestamp int64) (*Block, error) {
 	var txnList []*transaction.Transaction
 	var txnHashList []common.Uint256
 	coinbase := bm.CreateCoinbaseTransaction()
@@ -40,12 +39,8 @@ func (bm *BuiltinMining) BuildBlock(height uint32, chordID []byte, winningHash c
 	txnHashList = append(txnHashList, coinbase.Hash())
 
 	if (winnerType == TxnSigner || winnerType == TimeOutTxnSigner) {
-		miningSigChainTxn, err := por.GetPorServer().GetMiningSigChainTxn(winningHash)
-		if err != nil {
-			return nil, err
-		}
-		txnList = append(txnList, miningSigChainTxn)
-		txnHashList = append(txnHashList, miningSigChainTxn.Hash())
+		txnList = append(txnList, WinnerTxn)
+		txnHashList = append(txnHashList, WinnerTxn.Hash())
 	}
 
 	txns, err := bm.txnCollector.Collect()
@@ -74,7 +69,7 @@ func (bm *BuiltinMining) BuildBlock(height uint32, chordID []byte, winningHash c
 		ConsensusData:    rand.Uint64(),
 		TransactionsRoot: txnRoot,
 		NextBookKeeper:   common.Uint160{},
-		WinnerHash:       winningHash,
+		WinnerHash:       WinnerTxn.Hash(),
 		WinnerType:       winnerType,
 		Signer:           encodedPubKey,
 		ChordID:          chordID,

@@ -134,69 +134,62 @@ func (ps *PorServer) GetMiningSigChain(height uint32) (*SigChain) {
 	ps.RLock()
 	defer ps.RUnlock()
 
-	miningPorPackage := ps.miningPorPackage[height]
-	if miningPorPackage == nil {
+	porPkg := ps.miningPorPackage[height]
+	if porPkg == nil {
 		return nil
 	}
 
-	return miningPorPackage.GetSigChain()
+	return porPkg.GetSigChain()
 }
 
-func (ps *PorServer) GetMiningSigChainTxnHash(height uint32) (common.Uint256, error) {
+func (ps *PorServer) GetMiningSigChainTxn(height uint32) (*transaction.Transaction, error) {
 	ps.RLock()
 	defer ps.RUnlock()
 
-	porPackage := ps.miningPorPackage[height]
-	if porPackage == nil {
-		return common.EmptyUint256, nil
+	porPkg := ps.miningPorPackage[height]
+	if porPkg == nil {
+		return nil, nil
 	}
 
-	if _, ok := ps.sigChainTxnCache.Get(porPackage.TxHash); !ok {
-		return common.EmptyUint256, nil
-	}
-
-	return common.Uint256ParseFromBytes(porPackage.TxHash)
-}
-
-func (ps *PorServer) GetMiningSigChainTxn(txnHash common.Uint256) (*transaction.Transaction, error) {
-	v, ok := ps.sigChainTxnCache.Get(txnHash[:])
+	v, ok := ps.sigChainTxnCache.Get(porPkg.TxnHash);
 	if !ok {
-		return nil, fmt.Errorf("sigchain txn %s not found", txnHash.ToHexString())
+		return nil, fmt.Errorf("sigchain txn %s not found", porPkg.TxnHash)
 	}
 
 	txn, ok := v.(*transaction.Transaction)
 	if !ok {
-		return nil, fmt.Errorf("convert to sigchain txn %s error", txnHash.ToHexString())
+		return nil, fmt.Errorf("convert to sigchain txn %s error", porPkg.TxnHash)
 	}
 
 	return txn, nil
 }
 
-func (ps *PorServer) AddSigChainFromTx(txn *transaction.Transaction, currentHeight uint32) (bool, error) {
+func (ps *PorServer) AddSigChainFromTxn(txn *transaction.Transaction, currHgt uint32) (bool, error) {
 	porPkg, err := NewPorPackage(txn)
 	if err != nil {
 		return false, err
 	}
 
-	voteHeight := porPkg.GetVoteForHeight()
-	if voteHeight < currentHeight {
-		return false, fmt.Errorf("sigchain vote for height %d is less than %d", voteHeight, currentHeight+1)
+	voteHgt := porPkg.GetVoteHeight()
+
+	if voteHgt < currHgt {
+		return false, fmt.Errorf("sigchain vote for height %d is less than %d", voteHgt, currHgt)
 	}
 
 	ps.Lock()
 	defer ps.Unlock()
 
 	// TODO add aging time for signature chain to avoid the dead node send a txn without proposal block
-	if ps.miningPorPackage[voteHeight] != nil && bytes.Compare(porPkg.SigHash, ps.miningPorPackage[voteHeight].SigHash) >= 0 {
+	if ps.miningPorPackage[voteHgt] != nil && bytes.Compare(porPkg.SigHash, ps.miningPorPackage[voteHgt].SigHash) >= 0 {
 		return false, nil
 	}
 
-	err = ps.sigChainTxnCache.Add(porPkg.TxHash, txn)
+	err = ps.sigChainTxnCache.Add(porPkg.TxnHash, txn)
 	if err != nil {
 		return false, err
 	}
 
-	ps.miningPorPackage[voteHeight] = porPkg
+	ps.miningPorPackage[voteHgt] = porPkg
 
 	return true, nil
 }

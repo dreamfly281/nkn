@@ -144,29 +144,7 @@ func GetNextBlockSigner(height uint32, timestamp int64) ([]byte, []byte, WinnerT
 
 		}
 	} else {
-		// Don't need change the winnerType cause GetNextMiningSigChainTxnHash will handle this.
 		winnerType = TimeOutTxnSigner
-		// This is a temporary solution
-		// proposerBlockHeight := 0
-		// index := timeSinceLastBlock / timeSlot
-		// proposerBlockHeight := int64(DefaultLedger.Store.GetHeight()) - index
-		// if proposerBlockHeight < 0 {
-		// proposerBlockHeight = 0
-		// }
-
-		// proposerBlockHash, err := DefaultLedger.Store.GetBlockHash(uint32(proposerBlockHeight))
-		// if err != nil {
-		// 	return nil, nil, 0, err
-		// }
-		// proposerBlock, err := DefaultLedger.Store.GetBlock(proposerBlockHash)
-		// if err != nil {
-		// 	return nil, nil, 0, err
-		// }
-		// publicKey, chordID, err = proposerBlock.GetSigner()
-		// if err != nil {
-		// 	return nil, nil, 0, err
-		// }
-
 		// FiXME the txn not be package/blocklization successfully and always keeps in the por server ??
 		// TODO add aging time for signature chain to avoid the dead node send a txn without proposal block
 		sigChain := por.GetPorServer().GetMiningSigChain(height)
@@ -185,26 +163,26 @@ func GetNextBlockSigner(height uint32, timestamp int64) ([]byte, []byte, WinnerT
 
 // GetWinner returns the winner hash and winner type of a block height using
 // sigchain from PoR server.
-func GetNextMiningSigChainTxnHash(height uint32) (Uint256, WinnerType, error) {
-	height = height -1
+func GetNextMiningSigChainTxn(height uint32) (*tx.Transaction, WinnerType, error) {
+	height = height - 1
 	hdrHash := DefaultLedger.Store.GetHeaderHashByHeight(height)
 	hdr, err := DefaultLedger.Store.GetHeader(hdrHash)
 	if err != nil {
 		log.Warning("Not found hdr hash for height: ", height)
-		return EmptyUint256, 0, err
+		return nil, 0, err
 	}
 
 	if height < NumGenesisBlocks {
-		return EmptyUint256, GenesisSigner, nil
+		return nil, GenesisSigner, nil
 	}
 
-	nextMiningSigChainTxnHash, err := por.GetPorServer().GetMiningSigChainTxnHash(height)
+	txn, err := por.GetPorServer().GetMiningSigChainTxn(height)
 	if err != nil {
-		return EmptyUint256, TxnSigner, err
+		return nil, TxnSigner, err
 	}
 
-	if nextMiningSigChainTxnHash == EmptyUint256 {
-		return EmptyUint256, BlockSigner, errors.New("Couldn't find valid sigChain")
+	if txn == nil {
+		return nil, BlockSigner, errors.New("Couldn't find valid sigChain")
 	}
 
 	winnerType := TxnSigner
@@ -215,8 +193,44 @@ func GetNextMiningSigChainTxnHash(height uint32) (Uint256, WinnerType, error) {
 		winnerType = TimeOutTxnSigner
 	}
 
-	return nextMiningSigChainTxnHash, winnerType, nil
+	return txn, winnerType, nil
 }
+
+// // GetWinner returns the winner hash and winner type of a block height using
+// // sigchain from PoR server.
+// func GetNextMiningSigChainTxnHash(height uint32) (Uint256, WinnerType, error) {
+// 	height = height - 1
+// 	hdrHash := DefaultLedger.Store.GetHeaderHashByHeight(height)
+// 	hdr, err := DefaultLedger.Store.GetHeader(hdrHash)
+// 	if err != nil {
+// 		log.Warning("Not found hdr hash for height: ", height)
+// 		return EmptyUint256, 0, err
+// 	}
+
+// 	if height < NumGenesisBlocks {
+// 		return EmptyUint256, GenesisSigner, nil
+// 	}
+
+// 	txn, err := por.GetPorServer().GetMiningSigChainTxn(height)
+// 	if err != nil {
+// 		return EmptyUint256, TxnSigner, err
+// 	}
+
+// 	if txn == nil {
+// 		return EmptyUint256, BlockSigner, errors.New("Couldn't find valid sigChain")
+// 	}
+
+// 	winnerType := TxnSigner
+// 	timestamp := time.Now().Unix()
+// 	timeSinceLastBlock := timestamp - hdr.Timestamp
+// 	proposerTimeout := int64(config.ProposerChangeTime / time.Second)
+// 	if timeSinceLastBlock >= proposerTimeout {
+// 		winnerType = TimeOutTxnSigner
+// 	}
+
+// 	return txnHash, winnerType, nil
+// }
+
 
 func SignerCheck(header *Header) error {
 	currentHeight := DefaultLedger.Store.GetHeight()
@@ -298,12 +312,15 @@ func TimestampCheck(timestamp int64) error {
 }
 
 func NextBlockProposerCheck(block *Block) error {
-	winnerHash, winnerType, err := GetNextMiningSigChainTxnHash(block.Header.Height)
+	winnerTxn, winnerType, err := GetNextMiningSigChainTxn(block.Header.Height)
 	if err != nil {
 		return err
 	}
 
-	// What?
+	winnerHash := EmptyUint256
+	if winnerTxn != nil {
+		winnerHash = winnerTxn.Hash()
+	}
 	if winnerHash == EmptyUint256 && block.Header.WinnerHash != EmptyUint256 {
 		for _, txn := range block.Transactions {
 			if txn.Hash() == block.Header.WinnerHash {
