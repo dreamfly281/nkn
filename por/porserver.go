@@ -130,13 +130,26 @@ func (ps *PorServer) LenOfSigChain(sc *SigChain) int {
 	return sc.Length()
 }
 
-func (ps *PorServer) GetMiningSigChain(height uint32) (*SigChain, *transaction.Transaction, error) {
+func (ps *PorServer) GetMiningSigChain(height uint32, timeOut bool) (*SigChain, *transaction.Transaction, error) {
+	var porPkg *PorPackage
 	ps.RLock()
 	defer ps.RUnlock()
 
-	porPkg := ps.miningPorPackage[height]
+	if timeOut == false {
+		porPkg = ps.miningPorPackage[height]
+	} else {
+		// Fixme the inital height should be height - 1?
+		for h := height; h < (height + SigChainMiningHeightOffset + SigChainBlockHeightOffset); h++ {
+			porPkg = ps.miningPorPackage[h]
+			if porPkg != nil {
+				log.Infof("Timeout and choose the proposal SigChain from %d", h)
+				break
+			}
+		}
+	}
+
 	if porPkg == nil {
-		return nil, nil, nil
+			return nil, nil, nil
 	}
 
 	v, ok := ps.sigChainTxnCache.Get(porPkg.TxnHash);

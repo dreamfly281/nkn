@@ -128,7 +128,7 @@ func GetNextBlockSigner(height uint32, timestamp int64) ([]byte, []byte, error) 
 	} else {
 		// FiXME the txn not be package/blocklization successfully and always keeps in the por server ??
 		// TODO add aging time for signature chain to avoid the dead node send a txn without proposal block
-		sigChain, _, err := por.GetPorServer().GetMiningSigChain(height)
+		sigChain, _, err := por.GetPorServer().GetMiningSigChain(height, true)
 		if (sigChain == nil) {
 			log.Warningf("No valid sigchain found when timeout for height ", height)
 			return nil, nil, err
@@ -156,23 +156,17 @@ func GetNextMiningSigChainTxn(height uint32, currTime int64) (*tx.Transaction, W
 		return nil, GenesisSigner, nil
 	}
 
-	_, txn, err := por.GetPorServer().GetMiningSigChain(height)
-	if err != nil {
-		return nil, TxnSigner, err
-	}
-
-	if txn == nil {
-		return nil, BlockSigner, errors.New("Couldn't find valid sigChain")
-	}
-
 	winnerType := TxnSigner
+	timeOut := false
 	timeSinceLastBlock := currTime - hdr.Timestamp
 	proposerTimeout := int64(config.ProposerChangeTime / time.Second)
 	if timeSinceLastBlock >= proposerTimeout {
 		winnerType = TimeOutTxnSigner
+		timeOut = true
 	}
+	_, txn, err := por.GetPorServer().GetMiningSigChain(height, timeOut)
 
-	return txn, winnerType, nil
+	return txn, winnerType, err
 }
 
 func SignerCheck(header *Header) error {
