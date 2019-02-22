@@ -19,13 +19,11 @@ func (consensus *Consensus) startProposing() {
 			currHgt := ledger.DefaultLedger.Store.GetHeight()
 			expectedHgt := consensus.GetExpectedHeight()
 			timestamp := time.Now().Unix()
-			expectedHgt = currHgt+1
 			if consensus.isBlockProposer(currHgt, timestamp) {
-				log.Infof("I am the block proposer at height %d", expectedHgt)
-
-				block, err := consensus.proposeBlock(expectedHgt, timestamp)
+				log.Infof("I am the block proposer at height %d", currHgt + 1)
+				block, err := consensus.proposeBlock(currHgt, timestamp)
 				if err != nil {
-					log.Errorf("Propose block %d at %v error: %v", expectedHgt, timestamp, err)
+					log.Errorf("Propose block %d at %v error: %v", currHgt + 1, timestamp, err)
 					break
 				}
 
@@ -48,7 +46,7 @@ func (consensus *Consensus) startProposing() {
 // isBlockProposer returns if local node is the block proposer of block height+1
 // at a given timestamp
 func (consensus *Consensus) isBlockProposer(height uint32, timestamp int64) bool {
-	nextPublicKey, nextChordID, _, err := ledger.GetNextBlockSigner(height, timestamp)
+	nextPublicKey, nextChordID, err := ledger.GetNextBlockSigner(height, timestamp)
 	if err != nil {
 		log.Errorf("Get next block signer error: %v", err)
 		return false
@@ -72,11 +70,11 @@ func (consensus *Consensus) isBlockProposer(height uint32, timestamp int64) bool
 }
 
 // proposeBlock proposes a new block at give height and timestamp
-func (consensus *Consensus) proposeBlock(height uint32, timestamp int64) (*ledger.Block, error) {
-	txn, winnerType, err := ledger.GetNextMiningSigChainTxn(height)
+func (consensus *Consensus) proposeBlock(height uint32, currTime int64) (*ledger.Block, error) {
+	txn, winnerType, err := ledger.GetNextMiningSigChainTxn(height, currTime)
 	if err != nil {
 		return nil, err
 	}
 
-	return consensus.mining.BuildBlock(height, consensus.localNode.GetChordID(), txn, winnerType, timestamp)
+	return consensus.mining.BuildBlock(height, consensus.localNode.GetChordID(), txn, winnerType, currTime)
 }

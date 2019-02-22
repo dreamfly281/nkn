@@ -111,7 +111,7 @@ func NewPorPackage(txn *transaction.Transaction) (*PorPackage, error) {
 		return nil, err
 	}
 	pp := &PorPackage{
-		VoteHeight:    height + 1, //SigChainMiningHeightOffset + SigChainBlockHeightOffset,
+		VoteHeight:    height + SigChainMiningHeightOffset + SigChainBlockHeightOffset,
 		Owner:         owner,
 		BlockHash:     sigChain.BlockHash,
 		TxnHash:       txnHash[:],

@@ -130,38 +130,26 @@ func (ps *PorServer) LenOfSigChain(sc *SigChain) int {
 	return sc.Length()
 }
 
-func (ps *PorServer) GetMiningSigChain(height uint32) (*SigChain) {
+func (ps *PorServer) GetMiningSigChain(height uint32) (*SigChain, *transaction.Transaction, error) {
 	ps.RLock()
 	defer ps.RUnlock()
 
 	porPkg := ps.miningPorPackage[height]
 	if porPkg == nil {
-		return nil
-	}
-
-	return porPkg.GetSigChain()
-}
-
-func (ps *PorServer) GetMiningSigChainTxn(height uint32) (*transaction.Transaction, error) {
-	ps.RLock()
-	defer ps.RUnlock()
-
-	porPkg := ps.miningPorPackage[height]
-	if porPkg == nil {
-		return nil, nil
+		return nil, nil, nil
 	}
 
 	v, ok := ps.sigChainTxnCache.Get(porPkg.TxnHash);
 	if !ok {
-		return nil, fmt.Errorf("sigchain txn %s not found", porPkg.TxnHash)
+		return nil, nil, fmt.Errorf("sigchain txn %s not found", porPkg.TxnHash)
 	}
 
 	txn, ok := v.(*transaction.Transaction)
 	if !ok {
-		return nil, fmt.Errorf("convert to sigchain txn %s error", porPkg.TxnHash)
+		return nil, nil, fmt.Errorf("convert to sigchain txn %s error", porPkg.TxnHash)
 	}
 
-	return txn, nil
+	return porPkg.GetSigChain(), txn, nil
 }
 
 func (ps *PorServer) AddSigChainFromTxn(txn *transaction.Transaction, currHgt uint32) (bool, error) {
@@ -171,8 +159,8 @@ func (ps *PorServer) AddSigChainFromTxn(txn *transaction.Transaction, currHgt ui
 	}
 
 	voteHgt := porPkg.GetVoteHeight()
-
-	if voteHgt < currHgt {
+	// FixME the definination of 2?
+	if voteHgt < currHgt + 2 {
 		return false, fmt.Errorf("sigchain vote for height %d is less than %d", voteHgt, currHgt)
 	}
 
